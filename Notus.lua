@@ -4,6 +4,17 @@
 Trades = {}
 Winners = {}
 
+
+local json = require("json")
+ 
+_0RBIT = "BaMK1dfayo75s3q1ow6AO64UDpD9SEFbeE8xYrY2fyQ"
+ 
+BASE_URL = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/new%20york?unitGroup=us&include=current&key=EUEQ4LDRZAS7HY2ZSJTVV76JD&contentType=json"
+ 
+CurrentData = CurrentData or {}
+
+
+
 NOW = NOW or nil  
 -- Function to initialize the app
 function initializeApp()
@@ -25,6 +36,8 @@ function initializeApp()
 
     print("Options Trading App initialized.")
 end
+
+
 
 -- Function to create a new trade
 function createTrade(tradeId, timeCreated, location, amount, contractType, assetPrice)
@@ -71,7 +84,7 @@ end
 -- Function to send rewards to winners
 function sendRewards()
     for _, winner in ipairs(Winners) do
-        local payout = winner.amount * 0.9
+        local payout = winner.amount * 0.7
         print("Sending reward: " .. payout .. " to trade: " .. winner.tradeId)
         -- Placeholder for reward sending logic
     end
@@ -102,3 +115,26 @@ function onTick(location, currentAssetPrice)
     checkContractExpiry(location, currentAssetPrice)
     sendRewards()
 end
+
+Handlers.add(
+    "Get-Request",
+    Handlers.utils.hasMatchingTag("Action", "Sponsored-Get-Request-Current"),
+    function(msg)
+        Send({
+            Target = _0RBIT,
+            Action = "Get-Real-Data",
+            Url = BASE_URL
+        })
+        print(Colors.green .. "You have sent a GET Request to the 0rbit process.")
+    end
+)
+
+Handlers.add(
+    "Receive-Data",
+    Handlers.utils.hasMatchingTag("Action", "Receive-Response"),
+    function(msg)
+        local res = json.decode(msg.Data)
+        CurrentData = res
+        print(Colors.green .. "You have received the data from the 0rbit process.")
+    end
+)
